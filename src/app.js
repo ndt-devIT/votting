@@ -5,6 +5,7 @@ const rateLimit = require('./middlewares/rateLimit');
 const { errorHandler } = require('./middlewares/errorMiddleware');
 const authMiddleware = require('./middlewares/authMiddleware');
 const cors = require("cors");
+const connectDB = require("./config/db");
 // FIX: Using require instead of import
 const mql = require('@microlink/mql');
 
@@ -34,6 +35,18 @@ app.use(
 // Khởi tạo Passport
 app.use(passport.initialize());
 app.use(passport.session());
+
+// --- THÊM VÀO ĐÂY ---
+// Middleware đảm bảo DB luôn sẵn sàng trước khi xử lý route
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    // Trả về lỗi 500 nếu không kết nối được DB
+    res.status(500).json({ message: 'Database connection failed', error: error.message });
+  }
+});
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
