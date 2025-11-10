@@ -1,0 +1,7 @@
+[build]
+  functions = "functions"
+
+[[redirects]]
+  from = "/api/*"  # Hoặc đường dẫn bạn muốn prefix
+  to = "/.netlify/functions/api/:splat"
+  status = 200
