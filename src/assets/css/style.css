@@ -1,0 +1,14 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f8f9fa;
+}
+
+.card img {
+    height: 200px;
+    object-fit: cover;
+}
+
+.carousel-item img {
+    height: 400px;
+    object-fit: cover;
+}
