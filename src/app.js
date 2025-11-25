@@ -16,7 +16,7 @@ const app = express();
 // Sửa "origin: '*'" thành "origin: 'http://localhost:5173'"
 app.use(
   cors({
-    origin: "http://localhost:5173", // <-- Sửa ở đây
+    origin: '*', // <-- Sửa ở đây
     credentials: true,
   })
 );
