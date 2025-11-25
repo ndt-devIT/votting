@@ -7,9 +7,23 @@ const authMiddleware = require("../middlewares/authMiddleware");
 // Người dùng bình chọn ứng viên (kiểm tra 1 user chỉ vote 1 lần cho 1 ứng viên)
 router.post("/", authMiddleware, voteController.voteCandidate);
 
+// Đối soát cuộc thi (Admin/Superadmin mới được dùng)
+router.get(
+  "/audit/:contestId", 
+  authMiddleware, 
+  voteController.auditVotes
+);
 // -------------------- ROUTE GET MỚI --------------------
 // Lấy vote của user hiện tại
-router.get("/me", authMiddleware, voteController.getMyVotes);
+router.get("/me", authMiddleware, voteController.getMyVotes);// Lấy vote của user hiện tại
+router.get("/ad/me", authMiddleware, voteController.getMyVotesAdmin);
+router.get("/blockchain/me", authMiddleware, voteController.getMyVotesBlockchain);
+// Thêm route này (PHẢI nằm TRƯỚC route '/:id')
+router.get(
+  "/receipt/:txHash",
+  authMiddleware, // (Hoặc bỏ auth nếu muốn link này công khai)
+  voteController.getVoteByTxHash
+);
 
 // -------------------- CRUD ADMIN --------------------
 // Tạo vote (admin)
@@ -55,4 +69,6 @@ router.get(
 
 // -------------------- RANKING --------------------
 router.get("/ranking/:contestId/:categoryId", voteController.getRanking);
+
+
 module.exports = router;

@@ -1,0 +1,40 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "D:\\CTUT\\Blockchain\\local\\pj-votting\\blockchain\\contracts\\VotingLedger.sol": {
+      "lastModificationDate": 1763961815806,
+      "contentHash": "9e2396949d4847b1de8da0143b620c5b",
+      "sourceName": "contracts/VotingLedger.sol",
+      "solcConfig": {
+        "version": "0.8.9",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.9"
+      ],
+      "artifacts": [
+        "VotingLedger"
+      ]
+    }
+  }
+}

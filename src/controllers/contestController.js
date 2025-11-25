@@ -29,6 +29,23 @@ exports.getContests = async (req, res, next) => {
   }
 };
 
+// 🔹 Lấy các cuộc thi CỦA TÔI (cho admin)
+exports.getMyContests = async (req, res, next) => {
+  try {
+    // 1. Tạo query CỐ ĐỊNH theo ID của admin đã đăng nhập
+    const query = { nguoiTao: req.user.id }; // 2. Thực thi query
+
+    const contests = await CuocThi.find(query).populate(
+      "nguoiTao",
+      "hoTen email"
+    );
+    res.json(contests);
+  } catch (err) {
+    console.error("❌ Lỗi lấy danh sách cuộc thi của tôi:", err);
+    next(err);
+  }
+};
+
 // 🔹 Lấy chi tiết 1 cuộc thi
 exports.getContestById = async (req, res, next) => {
   try {

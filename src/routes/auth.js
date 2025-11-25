@@ -9,6 +9,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // --- Đăng ký & Đăng nhập thông thường ---
 const authController = require("../controllers/authController");
 router.post("/register", authController.register);
+router.post("/verify-otp", authController.verifyOtp);
 router.post("/login", authController.login);
 
 // --- Google Login (Client-side popup) ---
