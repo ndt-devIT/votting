@@ -1,17 +1,22 @@
 <template>
   <div id="app-wrapper">
-    <!-- Sidebar -->
+    
     <Sidebar />
 
-    <!-- Topbar -->
-    <Topbar />
+    <div class="main-panel">
+      
+      <div class="sticky-top">
+        <Navbar />
+      </div>
 
-    <!-- Main Content -->
-    <main id="content">
-      <router-view />
-    </main>
+      <main id="content">
+        <div class="container-fluid p-4">
+          <router-view />
+        </div>
+      </main>
 
-    <!-- Example modal -->
+      </div>
+
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -29,100 +34,83 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
 <script setup>
 import Sidebar from "@/components/Sidebar.vue";
-import Topbar from "@/components/Topbar.vue";
+import Navbar from "@/components/Navbar.vue";
+// import Topbar from "@/components/Topbar.vue"; // Nếu bạn dùng Topbar thay vì Navbar thì đổi lại nhé
 </script>
 
 <style scoped>
-/* Wrapper */
+/* === CẤU TRÚC LAYOUT === */
+
 #app-wrapper {
   min-height: 100vh;
   background-color: #f8f9fc;
+  overflow-x: hidden; /* Ẩn thanh cuộn ngang thừa */
 }
 
-/* Sidebar */
-.sidebar {
+/* Định nghĩa lại Sidebar để khớp với layout này */
+/* (Style này chỉ mang tính chất override nếu bên trong component Sidebar chưa set) */
+:deep(.sidebar) {
   position: fixed;
   top: 0;
   left: 0;
-  width: 240px;
+  width: 250px; /* Kích thước chuẩn sidebar */
   height: 100vh;
   z-index: 1040;
-  /* thấp hơn modal-backdrop */
-  transition: width 0.3s ease;
-  background: linear-gradient(180deg, #0d6efd 0%, #0b5ed7 100%);
+  /* background được set trong component Sidebar rồi */
 }
 
-/* Sidebar collapsed */
-body.sidebar-collapsed .sidebar {
-  width: 80px;
-}
-
-/* Topbar */
-.topbar {
-  position: sticky;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 1030;
-  /* thấp hơn modal */
-  background-color: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-}
-
-/* Main content */
-#content {
-  margin-left: 240px;
-  margin-top: 56px;
+/* === MAIN PANEL (VÙNG BÊN PHẢI) === */
+.main-panel {
+  /* Chừa khoảng trống bên trái bằng đúng chiều rộng Sidebar */
+  margin-left: 250px; 
+  
+  /* Flex column để đẩy Footer xuống đáy nếu cần */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  
   transition: margin-left 0.3s ease;
 }
 
-/* Sidebar collapsed effect */
-body.sidebar-collapsed #content {
-  margin-left: 80px;
+/* === NAVBAR (STICKY) === */
+.sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 1020; /* Cao hơn content nhưng thấp hơn Modal/Sidebar */
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
 }
 
-/* Modal z-index */
-.modal {
-  z-index: 1055 !important;
-  /* luôn trên topbar + sidebar */
+/* === CONTENT === */
+#content {
+  flex-grow: 1; /* Chiếm hết khoảng trống còn lại */
+  /* Không cần margin-top nữa vì Navbar đã chiếm chỗ trong dòng chảy (flow) */
 }
 
-.modal-backdrop {
-  z-index: 1050 !important;
-  /* che cả sidebar + topbar */
-}
-
-/* Mobile: sidebar overlay */
-@media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    z-index: 1030;
+/* === MOBILE RESPONSIVE (< 992px) === */
+@media (max-width: 992px) {
+  /* Trên mobile, Sidebar thường ẩn đi */
+  :deep(.sidebar) {
+    left: -250px; /* Ẩn sang trái */
   }
 
-  body.sidebar-collapsed .sidebar {
-    transform: translateX(0);
-  }
-
-  #content {
+  /* Main panel bung ra toàn màn hình */
+  .main-panel {
     margin-left: 0;
   }
+}
 
-  body.sidebar-collapsed::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1025;
-  }
+/* === Z-INDEX MODAL (Để không bị che) === */
+.modal {
+  z-index: 1060 !important;
+}
+.modal-backdrop {
+  z-index: 1050 !important;
 }
 </style>

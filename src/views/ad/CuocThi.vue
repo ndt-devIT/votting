@@ -40,7 +40,7 @@
           </div>
 
           <button class="btn btn-primary" @click="openModal()">
-            <i class="bi bi-plus-lg me-1"></i>
+            <i class="bi bi-plus-lg me-1"></i> Tạo cuộc thi mới
           </button>
         </div>
 
@@ -288,7 +288,7 @@ async function fetchContests() {
       endDate: filters.endDate || undefined
     };
 
-    const res = await axios.get("/api/contest", { params });
+    const res = await axios.get("/api/contest/mycontests", { params });
     
     // Giả sử API trả về: { data: [...], total: 100 }
     // Nếu API chưa hỗ trợ phân trang, bạn cần sửa backend hoặc dùng slice ở đây

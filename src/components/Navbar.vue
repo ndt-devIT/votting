@@ -1,54 +1,60 @@
 <template>
   <header class="main-header" :class="{ 'header-scrolled': isScrolled }">
-    <!-- Top bar -->
     <div class="top-bar d-flex justify-content-between align-items-center px-2 px-md-4">
-      <!-- Logo -->
-      <router-link to="/" class="d-flex align-items-center text-decoration-none logo-wrapper">
-        <img src="@/assets/img/logo.png" alt="Logo" height="35" class="me-2" />
-        <h5 class="mb-0 fw-bold logo-text-gradient" style="font-size: 1rem;">Voting Platform</h5>
-      </router-link>
 
-      <!-- Auth buttons -->
       <div class="d-flex align-items-center">
-        <span v-if="auth.isLoggedIn" class="me-2">
-          <strong>{{ auth.user.hoTen }}</strong>
+        <router-link to="/" class="d-flex align-items-center text-decoration-none logo-wrapper">
+          <img src="@/assets/img/logo.png" alt="Logo" height="35" class="me-2" />
+          <h5 class="mb-0 fw-bold logo-text-gradient" style="font-size: 1rem;">Voting Platform</h5>
+        </router-link>
+
+        <nav v-if="auth.user?.role !== 'superadmin'" class="main-navigation d-none d-lg-flex ms-5">
+          <ul class="navbar-nav flex-row">
+            <li class="nav-item" v-for="item in mainNav" :key="item.path">
+              <router-link :to="item.path" class="nav-link main-nav-link px-2 mx-2">
+                {{ item.label }}
+              </router-link>
+            </li>
+          </ul>
+        </nav>
+        </div>
+
+      <div class="d-flex align-items-center right-nav-group">
+        <span v-if="auth.isLoggedIn" class="me-3 d-none d-md-block"> <strong>{{ auth.user.hoTen }}</strong>
         </span>
 
-        <!-- Nút đăng nhập -->
-        <router-link v-if="!auth.isLoggedIn" to="/login" class="btn btn-outline-primary btn-sm me-1">
-          Đăng nhập
+        <router-link v-if="!auth.isLoggedIn" to="/login" class="btn btn-primary btn-sm me-1"> Đăng nhập
         </router-link>
 
-        <!-- Nút Quản trị viên cho superadmin -->
+        <router-link v-if="auth.isLoggedIn" to="/lichsuvote"
+          class="btn btn-outline-info btn-sm me-2 d-flex align-items-center" title="Lịch sử bình chọn">
+          Tra cứu
+        </router-link>
+
+        <div v-if="auth.isLoggedIn && auth.user?.role === 'admin'" class="dropdown me-2">
+          <button class="btn btn-outline-success btn-sm d-flex align-items-center dropdown-toggle" type="button"
+            id="adminMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Khu vực tổ chức">
+            Tổ chức
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminMenuDropdown">
+            <li v-for="item in adminNav" :key="item.path">
+              <router-link :to="item.path" class="dropdown-item">{{ item.label }}</router-link>
+            </li>
+          </ul>
+        </div>
         <router-link v-if="auth.isLoggedIn && auth.user?.role === 'superadmin'" to="/admin/dashboard"
-          class="btn btn-warning btn-sm me-2 d-flex align-items-center" title="Bảng điều khiển quản trị viên"> Quản trị viên
+          class="btn btn-warning btn-sm me-2 d-flex align-items-center" title="Bảng điều khiển quản trị viên"> Quản trị
+          viên
         </router-link>
 
-        <!-- Nút đăng xuất -->
         <button v-if="auth.isLoggedIn"
           class="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center p-1"
           @click="handleLogout" title="Đăng xuất">
           <i class="bi bi-box-arrow-right"></i>
         </button>
       </div>
-
     </div>
 
-    <!-- Admin navbar -->
-    <nav v-if="auth.user?.role === 'admin'" class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm main-nav">
-      <div class="container px-2 px-md-4">
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse justify-content-center" id="navbarMenu">
-          <ul class="navbar-nav flex-column flex-md-row text-center w-100">
-            <li class="nav-item" v-for="item in adminNav" :key="item.path">
-              <router-link :to="item.path" class="nav-link py-2 py-md-1" exact>{{ item.label }}</router-link>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
   </header>
 </template>
 
@@ -77,17 +83,26 @@ function goToAdmin() {
   router.push("/admin/dashboard");
 }
 
+// Nav cho người dùng thường
+const mainNav = ref([
+  { label: "Trang chủ", path: "/" },
+  { label: "Giới thiệu", path: "/gioithieu" },
+  { label: "Các cuộc thi", path: "/caccuocthi" },
+  { label: "Liên hệ", path: "/lienhe" },
+]);
+
+// Mảng này BÂY GIỜ được dùng cho Dropdown
 const adminNav = [
-  { label: "Cuộc thi", path: "/cuoc-thi" },
-  { label: "Hạng mục", path: "/hang-muc" },
-  { label: "Ứng viên", path: "/ung-vien" },
-  { label: "Bình chọn", path: "/binh-chon" }
+  { label: "Cuộc thi", path: "/ad/cuocthi" },
+  { label: "Hạng mục", path: "/ad/hangmuc" },
+  { label: "Ứng viên", path: "/ad/ungvien" },
+  { label: "Bình chọn", path: "/ad/binhchon" },
+  { label: "Thống kê", path: "/ad/thongke" }
 ];
 </script>
 
 <style scoped>
-
-/* Sticky header */
+/* (Toàn bộ CSS cũ của bạn) */
 .main-header {
   position: sticky;
   top: 0;
@@ -98,10 +113,12 @@ const adminNav = [
 }
 
 .main-header.header-scrolled {
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* Top bar */
 .top-bar .logo-wrapper img {
   transition: transform 0.3s ease;
 }
@@ -110,89 +127,63 @@ const adminNav = [
   transform: scale(1.05);
 }
 
-.auth-area .btn,
-.user-area .btn {
-  transition: all 0.2s ease;
+.top-bar .btn {
+  transition: all 0.3s ease;
 }
 
-.auth-area .btn:hover,
-.user-area .btn:hover {
+.top-bar .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
-/* Navbar hover underline effect */
-.navbar-nav .nav-link {
+.main-nav-link {
+  color: #333;
+  font-weight: 500;
   position: relative;
-  padding: 0.5rem 0.75rem;
   transition: color 0.3s ease;
 }
 
-.navbar-nav .nav-link::after {
+.main-nav-link:hover {
+  color: #0d6efd;
+}
+
+.main-nav-link::after {
   content: "";
   position: absolute;
-  bottom: 0;
+  bottom: -5px;
   left: 50%;
   transform: translateX(-50%);
   width: 0;
   height: 2px;
-  background-color: #ffffff;
+  background-color: #0d6efd;
   transition: width 0.3s ease-in-out;
 }
 
-.navbar-nav .nav-link:hover::after,
-.navbar-nav .nav-link.router-link-exact-active::after {
+.main-nav-link:hover::after,
+.main-nav-link.router-link-exact-active::after {
   width: 70%;
 }
 
-/* Active link */
-.navbar-nav .nav-link.router-link-exact-active {
+.main-nav-link.router-link-exact-active {
+  color: #0d6efd;
   font-weight: 600;
 }
 
-/* Navbar mobile collapse */
-@media (max-width: 768px) {
-  .main-nav .navbar-collapse {
-    background-color: #0d6efd;
-  }
+/* XÓA BỎ CSS CỦA THANH NAV ADMIN (VÌ NÓ KHÔNG CÒN) */
+/* .admin-nav-bar ... (toàn bộ CSS cho thanh màu xanh đã được xóa) */
 
-  .navbar-nav .nav-link {
-    text-align: center;
-    padding: 0.75rem 1rem;
-  }
-}
-
-/* Thêm vào cuối file <style scoped> */
 .logo-text-gradient {
-  /* Tạo màu gradient */
   background: linear-gradient(90deg, #0d6efd, #0a58ca);
-
-  /* Các thuộc tính quan trọng để "cắt" gradient theo hình dạng của chữ: */
-
-  /* 1. Cần tiền tố '-webkit-' cho Chrome, Safari, Edge (và cả Firefox) */
   -webkit-background-clip: text;
-
-  /* 2. Dùng tiền tố '-webkit-' cho thuộc tính fill-color */
   -webkit-text-fill-color: transparent;
-
-  /* 3. Thuộc tính chuẩn (không tiền tố) cho nền */
   background-clip: text;
-
-  /* Bỏ thuộc tính 'text-fill-color: transparent;' không tiền tố */
-
-  /* Để hiệu ứng đẹp hơn, chúng ta nên ngăn không cho text-gradient
-     bị bôi đen khi người dùng bôi đen văn bản.
-   */
   user-select: none;
 }
 
-/* Thêm vào cuối file <style scoped> */
 .logo-text-font {
   font-family: 'Poppins', sans-serif;
   font-weight: 700;
-  /* Đảm bảo font luôn đậm */
   letter-spacing: 0.5px;
-  /* Tăng khoảng cách chữ một chút */
 }
 
 @media (max-width: 768px) {
@@ -206,32 +197,26 @@ const adminNav = [
 
   .logo-wrapper h5 {
     font-size: 0.9rem;
-    /* nhỏ hơn desktop */
   }
 
-  .auth-area .btn,
-  .user-area .btn {
+  .top-bar .btn {
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
   }
 }
 
-/* Tăng header cho laptop (>=992px) */
 @media (min-width: 992px) {
   .main-header .top-bar {
     padding: 0.75rem 2rem;
-    height: 60px;
-    /* hoặc tuỳ chỉnh */
+    height: 70px;
   }
 
   .logo-wrapper img {
     height: 45px;
-    /* logo to hơn */
   }
 
   .logo-wrapper h5 {
     font-size: 1.25rem;
-    /* chữ to hơn */
   }
 
   .top-bar .btn {
@@ -240,12 +225,21 @@ const adminNav = [
   }
 }
 
-/* Navbar admin */
-@media (min-width: 992px) {
-  .main-nav .nav-link {
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-  }
+.right-nav-group {
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
+/* BỔ SUNG: Style cho các item trong dropdown mới */
+.dropdown-menu .dropdown-item {
+  font-size: 0.9rem;
+  /* Làm cho item nhỏ gọn */
+}
+
+.dropdown-menu .dropdown-item:active {
+  /* Đảm bảo có màu nền khi active */
+  background-color: var(--bs-primary);
+  color: #fff;
+}
 </style>

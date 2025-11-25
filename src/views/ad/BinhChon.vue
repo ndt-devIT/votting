@@ -343,7 +343,7 @@ async function fetchVotes() {
       status: filters.status !== "" ? filters.status : undefined
     };
 
-    const res = await axios.get("/api/vote", { params });
+    const res = await axios.get("/api/vote/ad/me", { params });
     votes.value = res.data.data || res.data;
     totalVotes.value = res.data.total || votes.value.length;
 

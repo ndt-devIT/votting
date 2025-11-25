@@ -82,7 +82,7 @@
                       :class="getCandidateAvatarColor(cand.hoTen)"
                     >
                       {{ getInitials(cand.hoTen) }}
-                    </div>   
+                    </div>
                     <div>
                       <div class="fw-bold text-primary">{{ cand.hoTen }}</div>
                       <div class="small text-muted" v-if="cand.voteCount !== undefined">
@@ -326,9 +326,10 @@ const filteredCategoriesDropdown = computed(() => {
 // 1. Init Data (Load Contests & Categories for dropdowns)
 async function initData() {
   try {
+    // Dùng API mycontests và mycategories để chỉ lấy dữ liệu của admin
     const [resContests, resCategories] = await Promise.all([
-      axios.get("/api/contest"),
-      axios.get("/api/category")
+      axios.get("/api/contest/mycontests"),
+      axios.get("/api/category/mycategories")
     ]);
     
     contests.value = resContests.data.data || resContests.data;
@@ -353,7 +354,8 @@ async function fetchCandidates() {
       categoryId: filters.categoryId || undefined
     };
 
-    const res = await axios.get("/api/candidate", { params });
+    // Dùng API mycandidates
+    const res = await axios.get("/api/candidate/mycandidates", { params });
     
     candidates.value = res.data.data || res.data;
     totalCandidates.value = res.data.total || candidates.value.length;
@@ -467,6 +469,7 @@ async function deleteCandidate(cand) {
   }
 }
 
+// Helper: Toast
 function showToast(icon, title) {
   const Toast = Swal.mixin({
     toast: true,
@@ -477,20 +480,16 @@ function showToast(icon, title) {
   });
   Toast.fire({ icon, title });
 }
-// --- HELPERS ---
 
-// 1. Lấy chữ cái đầu (Ví dụ: "Nguyễn Văn A" -> "NV")
+// Helper: Initials
 function getInitials(name) {
   if (!name) return "?";
-  // Tách chuỗi theo khoảng trắng, lấy ký tự đầu của mỗi từ, ghép lại, viết hoa, lấy tối đa 2 ký tự
   return name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2);
 }
 
-// 2. Chọn màu nền dựa trên tên (để màu cố định cho mỗi người)
+// Helper: Avatar Color
 function getCandidateAvatarColor(name) {
   if (!name) return 'bg-secondary-subtle text-secondary';
-  
-  // Danh sách các cặp màu nền/chữ của Bootstrap 5
   const colors = [
     'bg-primary-subtle text-primary',
     'bg-success-subtle text-success',
@@ -498,12 +497,7 @@ function getCandidateAvatarColor(name) {
     'bg-warning-subtle text-dark',
     'bg-danger-subtle text-danger',
     'bg-dark-subtle text-dark',
-    'bg-indigo-subtle text-indigo', // Cần custom CSS nếu muốn dùng màu indigo
-    'bg-teal-subtle text-teal'      // Cần custom CSS nếu muốn dùng màu teal
   ];
-  
-  // Lấy mã ASCII của ký tự đầu tiên trong tên để chọn index màu
-  // Điều này đảm bảo cùng một tên luôn ra cùng một màu.
   const index = name.charCodeAt(0) % colors.length;
   return colors[index];
 }
@@ -515,19 +509,19 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Cập nhật class .avatar */
+/* Avatar Style */
 .avatar {
   width: 40px;
   height: 40px;
-  /* Thêm các thuộc tính Flexbox để căn giữa chữ */
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600; /* Chữ đậm hơn */
+  font-weight: 600;
   font-size: 0.9rem;
   text-transform: uppercase;
-  /* border-radius: 50%;  <-- Đã dùng class 'rounded-circle' của Bootstrap trong template */
 }
+
+/* Skeleton Loading */
 .skeleton-circle {
   width: 40px;
   height: 40px;
@@ -543,6 +537,7 @@ onMounted(() => {
 }
 @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
+/* Table & Pagination */
 .table > :not(caption) > * > * {
   padding: 1rem 0.75rem;
   border-bottom-color: #f2f2f2;

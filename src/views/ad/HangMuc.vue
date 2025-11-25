@@ -3,7 +3,7 @@
     <div class="row mb-4">
       <div class="col-12">
         <h4 class="fw-bold text-primary">Quản lý Hạng mục</h4>
-        <p class="text-muted small">Phân loại các hạng mục dự thi cho từng cuộc thi cụ thể.</p>
+        <p class="text-muted small">Phân loại các hạng mục dự thi cho các cuộc thi do bạn tổ chức.</p>
       </div>
     </div>
 
@@ -37,7 +37,7 @@
           </div>
 
           <button class="btn btn-primary" @click="openModal()">
-            <i class="bi bi-plus-lg me-1"></i>
+            <i class="bi bi-plus-lg me-1"></i> Thêm hạng mục
           </button>
         </div>
 
@@ -207,7 +207,7 @@ import Swal from "sweetalert2";
 
 // State
 const categories = ref([]);
-const contests = ref([]); // Danh sách cuộc thi cho dropdown
+const contests = ref([]); 
 const loading = ref(false);
 const totalCategories = ref(0);
 const isEditing = ref(false);
@@ -264,19 +264,21 @@ const visiblePages = computed(() => {
 
 // --- METHODS ---
 
-// 1. Init Data (Load Contests for filter/dropdown first)
+// 1. Init Data
 async function initData() {
   try {
-    // Lấy tất cả cuộc thi để hiển thị trong dropdown (cần tối ưu nếu quá nhiều)
-    const res = await axios.get("/api/contest"); 
-    contests.value = res.data.data || res.data; // Support cả 2 format
+    // Lấy danh sách Cuộc thi CỦA TÔI (mycontests) để fill vào dropdown bộ lọc và modal
+    const res = await axios.get("/api/contest/mycontests"); 
+    contests.value = res.data.data || res.data; 
+    
+    // Sau khi có contest, tải categories
     await fetchCategories();
   } catch (err) {
     console.error("Lỗi khởi tạo:", err);
   }
 }
 
-// 2. Fetch Categories
+// 2. Fetch Categories (Server-side)
 async function fetchCategories() {
   loading.value = true;
   try {
@@ -288,7 +290,8 @@ async function fetchCategories() {
       contestId: filters.contestId || undefined
     };
 
-    const res = await axios.get("/api/category", { params });
+    // Gọi API lấy hạng mục CỦA TÔI
+    const res = await axios.get("/api/category/mycategories", { params });
     
     categories.value = res.data.data || res.data;
     totalCategories.value = res.data.total || categories.value.length;
@@ -335,7 +338,7 @@ function openModal(cat = null) {
     isEditing.value = true;
     Object.assign(form, { 
       ...cat, 
-      cuocThi: cat.cuocThi?._id || cat.cuocThi // Handle populate or string ID
+      cuocThi: cat.cuocThi?._id || cat.cuocThi // Xử lý nếu cuocThi là object hoặc id string
     });
   } else {
     isEditing.value = false;

@@ -1,16 +1,49 @@
 <template>
   <div>
-    <div class="container py-4">
-      <h3 class="mb-4 text-center text-primary fw-bold">
-        CÁC CUỘC THI ĐANG DIỄN RA
+    <div class="pt-4">
+      
+      <h3 class="mb-3 text-center text-primary fw-bold display-5">
+        CÁC CUỘC THI NỔI BẬT
       </h3>
+      <p class="text-center text-muted fs-5 mb-4" data-aos="fade-up">
+        Khám phá, tham gia và bình chọn cho các ứng viên bạn tin tưởng.
+      </p>
 
-      <div class="mb-4 d-flex flex-wrap justify-content-center gap-3">
+      <ul class="nav nav-pills justify-content-center mb-4" id="contestTabs" role="tablist" data-aos="fade-up" data-aos-delay="100">
+        <li class="nav-item" role="presentation">
+          <button 
+            class="nav-link" 
+            :class="{ active: filterStatus === 'active' }"
+            type="button" 
+            @click="filterStatus = 'active'">
+            <i class="bi bi-play-circle me-1"></i> Đang diễn ra
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button 
+            class="nav-link" 
+            :class="{ active: filterStatus === 'upcoming' }"
+            type="button" 
+            @click="filterStatus = 'upcoming'">
+            <i class="bi bi-calendar-event me-1"></i> Sắp diễn ra
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button 
+            class="nav-link" 
+            :class="{ active: filterStatus === 'finished' }"
+            type="button" 
+            @click="filterStatus = 'finished'">
+            <i class="bi bi-archive me-1"></i> Đã kết thúc
+          </button>
+        </li>
+      </ul>
+
+      <div class="mb-4 d-flex flex-wrap justify-content-center gap-3" data-aos="fade-up" data-aos-delay="150">
         <select class="form-select w-auto w-sm-100" v-model="filterContestId">
-          <option value="">Tất cả cuộc thi</option>
-          <option v-for="c in contests" :key="c._id" :value="c._id">{{ c.tenCuocThi }}</option>
+          <option value="">Tất cả ({{ contestsForDropdown.length }})</option>
+          <option v-for="c in contestsForDropdown" :key="c._id" :value="c._id">{{ c.tenCuocThi }}</option>
         </select>
-
         <select class="form-select w-auto w-sm-100" v-model="filterCategoryId" :disabled="!filterContestId">
           <option value="">Tất cả hạng mục</option>
           <option v-for="cat in filteredCategoriesDropdown" :key="cat._id" :value="cat._id">
@@ -20,37 +53,45 @@
       </div>
 
       <div v-if="loading" class="text-center py-5">
-        <div class="spinner-border text-primary"></div>
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
         <p class="mt-2">Đang tải dữ liệu...</p>
       </div>
 
       <div v-else-if="filteredContests.length === 0" class="alert alert-info text-center">
-        Hiện không có cuộc thi nào đang diễn ra.
+        Hiện không có cuộc thi nào {{ filterStatus === 'active' ? 'đang diễn ra' : (filterStatus === 'upcoming' ? 'sắp diễn ra' : 'đã kết thúc') }}.
       </div>
 
       <div v-else class="row g-4">
-        <div class="col-12 col-sm-6 col-md-4" v-for="contest in filteredContests" :key="contest._id">
-          <div class="card shadow-sm border-0 h-100">
-            <div class="card-body d-flex flex-column justify-content-between">
-              <div>
-                <h5 class="fw-bold text-primary">{{ contest.tenCuocThi }}</h5>
-                <p class="text-muted mb-2">
-                  <i class="bi bi-calendar-event me-1"></i>
-                  {{ formatDate(contest.ngayBatDau) }} - {{ formatDate(contest.ngayKetThuc) }}
-                </p>
-                <p class="small text-secondary">{{ contest.moTa || 'Không có mô tả.' }}</p>
-              </div>
-              <div class="d-flex flex-wrap gap-2 mt-3">
-                <button class="btn btn-outline-primary flex-grow-1" @click="openVoteModal(contest)"
-                  :disabled="!authStore.isLoggedIn">
-                  <i class="bi bi-hand-thumbs-up me-1"></i> Tham gia bình chọn
-                </button>
-                <button class="btn btn-outline-success flex-grow-1" @click="openRankingModal(contest)">
-                  <i class="bi bi-bar-chart-line me-1"></i> Bảng xếp hạng
-                </button>
-              </div>
-
+        <div class="col-12 col-sm-6 col-lg-4" v-for="contest in filteredContests" :key="contest._id" data-aos="fade-up">
+          
+          <div class="card card-contest h-100 shadow-sm border-0">
+            
+            <div class="card-img-top-wrapper">
+              <img :src="contest.imageUrl || 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=2070&auto=format&fit=crop'" 
+                   alt="Contest Image" class="card-img-top">
+              <span :class="['badge', getStatusInfo(contest).badgeClass, 'position-absolute', 'top-0', 'start-0', 'm-3']">
+                {{ getStatusInfo(contest).text }}
+              </span>
             </div>
+            
+            <div class="card-body d-flex flex-column">
+              <h5 class="fw-bold text-primary card-title-hover">{{ contest.tenCuocThi }}</h5>
+              <p class="text-muted mb-2 small">
+                <i class="bi bi-calendar-event me-1"></i>
+                {{ formatDate(contest.ngayBatDau) }} - {{ formatDate(contest.ngayKetThuc) }}
+              </p>
+              <p class="small text-secondary flex-grow-1">{{ contest.moTa || 'Không có mô tả.' }}</p>
+              
+              <div class="d-flex flex-wrap gap-2 mt-3">
+                <router-link :to="`/contest/${contest._id}/vote`" class="btn btn-primary flex-grow-1">
+                  <i class="bi bi-hand-thumbs-up-fill me-1"></i> Bình chọn
+                </router-link>
+                <button class="btn btn-outline-secondary flex-grow-1" @click="openRankingModal(contest)">
+                  <i class="bi bi-bar-chart-line me-1"></i> Xếp hạng
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -83,7 +124,6 @@
             </div>
 
             <div v-else class="row g-4 mt-2">
-
               <div class="col-lg-5 col-12">
                 <h6 class="fw-bold text-center mb-3">Biểu đồ trực quan</h6>
                 <div class="chart-container" style="position: relative; height: 400px;">
@@ -106,7 +146,6 @@
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
 
@@ -116,111 +155,6 @@
         </div>
       </div>
     </div>
-
-    <div class="modal fade" id="voteModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width: 100vw;">
-        <div class="modal-content">
-          <!-- Header -->
-          <div class="modal-header text-black py-2">
-            <h6 class="modal-title fw-bold text-truncate" style="max-width: 85%;">
-              Bình chọn - {{ selectedContest?.tenCuocThi }}
-            </h6>
-          </div>
-
-          <!-- Body -->
-          <div class="modal-body px-2 px-md-3">
-            <!-- Mô tả cuộc thi -->
-            <div v-if="selectedContest?.moTa" class="mb-2 text-secondary fst-italic small">
-              {{ selectedContest.moTa }}
-            </div>
-
-            <!-- Ô tìm kiếm -->
-            <div class="mb-3">
-              <input v-model="searchKeyword" type="text" class="form-control form-control-sm"
-                placeholder="Tìm kiếm ứng viên..." />
-            </div>
-
-            <!-- Loading -->
-            <div v-if="loadingModal" class="text-center py-4">
-              <div class="spinner-border text-primary"></div>
-              <p class="mt-2 small">Đang tải hạng mục...</p>
-            </div>
-
-            <!-- Danh sách ứng viên -->
-            <div v-else>
-              <div v-for="cat in filteredCategories" :key="cat._id" class="">
-                <div v-if="filteredCandidatesByCat(cat._id).length">
-                  <div v-for="(cand, idx) in filteredCandidatesByCat(cat._id)" :key="cand._id"
-                    class="candidate-card mb-2 p-2 border rounded bg-light-subtle">
-
-                    <!-- Row layout: Tên + Badge (Laptop), stacked (Mobile) -->
-                    <div
-                      class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-2">
-                      <h6 class="mb-1 fw-semibold text-dark text-wrap flex-grow-1">
-                        {{ idx + 1 }}. {{ cand.hoTen }}
-                      </h6>
-                      <span class="badge bg-white text-dark border small text-wrap ms-lg-2 mt-1 mt-lg-0">
-                        {{ cat.tenHangMuc }}
-                      </span>
-                    </div>
-
-                    <!-- Mô tả & lượt bình chọn -->
-                    <div class="text-muted small fst-italic mb-1">
-                      {{ cand.moTa || 'Không có mô tả.' }}
-                    </div>
-                    <div class="text-success small fw-semibold mb-2">
-                      <i class="bi bi-people-fill me-1"></i>{{ cand.voteCount }} lượt bình chọn
-                    </div>
-
-                    <!-- Nút hành động -->
-                    <div class="d-flex flex-column flex-lg-row gap-2">
-                      <button class="btn btn-sm btn-success" :disabled="cand.voted" @click="voteCandidate(cat, cand)">
-                        <i class="bi bi-hand-thumbs-up-fill me-1"></i> Bình chọn
-                      </button>
-
-                      <button v-if="cand.url && !cand.microlink" class="btn btn-sm btn-outline-info"
-                        @click="fetchMicrolink(cand)">
-                        Xem trước
-                      </button>
-
-                      <a v-if="cand.url && cand.microlink" :href="cand.url" target="_blank"
-                        class="btn btn-sm btn-outline-primary">
-                        Mở trang
-                      </a>
-                    </div>
-
-                    <!-- Microlink preview -->
-                    <div v-if="cand.microlink" class="mt-2 text-center border-top pt-2">
-                      <img v-if="cand.microlink.image?.url" :src="cand.microlink.image.url"
-                        class="img-fluid rounded shadow-sm" style="max-height: 200px; object-fit: contain;" />
-                      <div class="small text-secondary mt-1" v-if="cand.microlink.title">
-                        {{ cand.microlink.title }}
-                      </div>
-                      <div class="small text-muted mb-1" v-if="cand.microlink.description">
-                        {{ cand.microlink.description }}
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-
-                <div v-else class="text-muted fst-italic small">
-                  Không có ứng viên trong hạng mục này.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Footer -->
-          <div class="modal-footer py-2">
-            <button type="button" class="btn btn-secondary w-100 w-md-auto" data-bs-dismiss="modal">
-              Đóng
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </div>
 </template>
 
@@ -230,6 +164,8 @@ import axiosClient from '@/api/axiosClient'
 import Swal from 'sweetalert2'
 import Chart from 'chart.js/auto'
 import { useAuthStore } from '@/store/auth'
+// Bỏ comment nếu bạn dùng bootstrap JS
+// import * as bootstrap from 'bootstrap' 
 
 const authStore = useAuthStore()
 
@@ -238,7 +174,7 @@ let rankingModal = null
 let rankingChart = null
 
 // -------------------- STATE --------------------
-const contests = ref([])
+const allContests = ref([]) // Đã đổi tên
 const categories = ref([])
 const candidates = ref({})
 const rankings = ref([])
@@ -252,19 +188,21 @@ const selectedCategoryId = ref('')
 const filterContestId = ref('')
 const filterCategoryId = ref('')
 
+const filterStatus = ref('active') // State mới cho Tabs
+const searchKeyword = ref('')
+
 
 // -------------------- CẬP NHẬT CHART --------------------
 const renderRankingChart = () => {
-  if (!rankings.value.length) return
+  if (!rankings.value.length || !document.getElementById('rankingChart')) return
 
   const ctx = document.getElementById('rankingChart').getContext('2d')
   if (rankingChart) rankingChart.destroy()
 
-  // Sắp xếp lại dữ liệu, từ cao đến thấp (để biểu đồ hiển thị đúng)
   const sortedRankings = [...rankings.value].sort((a, b) => a.voteCount - b.voteCount)
 
   rankingChart = new Chart(ctx, {
-    type: 'bar', // Biểu đồ thanh
+    type: 'bar',
     data: {
       labels: sortedRankings.map(r => r.hoTen),
       datasets: [{
@@ -276,9 +214,9 @@ const renderRankingChart = () => {
       }]
     },
     options: {
-      indexAxis: 'y', // <-- Chuyển thành biểu đồ ngang
+      indexAxis: 'y',
       responsive: true,
-      maintainAspectRatio: false, // <-- Để biểu đồ lấp đầy container 400px
+      maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -288,11 +226,11 @@ const renderRankingChart = () => {
         }
       },
       scales: {
-        x: { // Trục X (số vote)
+        x: {
           beginAtZero: true,
           title: { display: true, text: 'Số lượt bình chọn' }
         },
-        y: { // Trục Y (tên)
+        y: {
           ticks: { autoSkip: false }
         }
       }
@@ -300,21 +238,18 @@ const renderRankingChart = () => {
   })
 }
 
-
 watch(rankings, () => {
   const modalEl = document.getElementById('rankingModal')
   if (modalEl && modalEl.classList.contains('show')) {
-    // Phải chờ 1 chút để DOM cập nhật sau v-if
     setTimeout(renderRankingChart, 0)
   }
 })
-
 
 // -------------------- FETCH DANH SÁCH CUỘC THI --------------------
 onMounted(async () => {
   try {
     const res = await axiosClient.get('/api/contest')
-    contests.value = res.data.filter(c => c.status === 1)
+    allContests.value = res.data // Lấy tất cả
   } catch (err) {
     console.error(err)
   } finally {
@@ -353,6 +288,7 @@ const openVoteModal = async (contest) => {
   selectedContest.value = contest
   categories.value = []
   candidates.value = {}
+  searchKeyword.value = '' // Reset ô tìm kiếm
 
   // Hiển thị Swal loading
   Swal.fire({
@@ -383,16 +319,14 @@ const openVoteModal = async (contest) => {
           } catch (err) {
             console.warn(`Không lấy được số lượt vote của ${c.hoTen}`)
           }
-          return { ...c, microlink: null, voted, voteCount }
+          // TODO: Thêm c.imageUrl từ API
+          return { ...c, imageUrl: c.imageUrl, microlink: null, voted, voteCount }
         })
       )
       candidates.value[cat._id] = candList
     }
 
-    // Tắt Swal khi xong
     Swal.close()
-
-    // Hiển thị modal
     showVoteModal()
 
   } catch (err) {
@@ -405,7 +339,7 @@ const openVoteModal = async (contest) => {
   }
 }
 
-
+// -------------------- MỞ MODAL: BẢNG XẾP HẠNG --------------------
 const openRankingModal = async (contest) => {
   Swal.fire({
     title: 'Đang tải bảng xếp hạng...',
@@ -416,13 +350,13 @@ const openRankingModal = async (contest) => {
 
   try {
     selectedContest.value = contest
-    categories.value = []
+    categories.value = [] // Sẽ fetch lại
     selectedCategoryId.value = ''
     rankings.value = []
 
     const catRes = await axiosClient.get(`/api/category?contestId=${contest._id}`)
     categories.value = catRes.data
-    await fetchRanking()
+    await fetchRanking() // Tải ranking 'all'
 
     Swal.close()
     showRankingModal()
@@ -432,8 +366,7 @@ const openRankingModal = async (contest) => {
   }
 }
 
-
-// Watch khi đổi hạng mục
+// Watch khi đổi hạng mục (trong modal ranking)
 watch(selectedCategoryId, () => {
   fetchRanking()
 })
@@ -458,7 +391,7 @@ const fetchRanking = async () => {
   }
 }
 
-// Tạo thứ tự rank dựa trên voteCount, xử lý trùng số vote
+// Computed: rankingsWithRank
 const rankingsWithRank = computed(() => {
   const sorted = [...rankings.value].sort((a, b) => b.voteCount - a.voteCount)
   let lastVote = null
@@ -478,8 +411,6 @@ const rankingsWithRank = computed(() => {
 // -------------------- MICROLINK PREVIEW --------------------
 const fetchMicrolink = async (cand) => {
   if (!cand.url || cand.microlink) return;
-
-  // Hiệu ứng loading
   Swal.fire({
     title: "Đang tải thông tin...",
     allowOutsideClick: false,
@@ -489,31 +420,11 @@ const fetchMicrolink = async (cand) => {
   try {
     const { data } = await axiosClient.get(`/api/microlink?url=${encodeURIComponent(cand.url)}`);
     cand.microlink = data;
-
-    // Đóng loading
     Swal.close();
+    
+    // Bỏ qua Swal.fire hiển thị preview vì bố cục modal đã thay đổi
+    // Giờ đây microlink sẽ tự hiển thị bên phải
 
-    // Hiển thị thông tin preview + hỏi người dùng
-    const result = await Swal.fire({
-      title: "Xem trước liên kết",
-      html: `
-        <div class="text-start">
-          <h5>${data.title || 'Không có tiêu đề'}</h5>
-          <p class="text-muted small">${data.description || 'Không có mô tả'}</p>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: "Mở trang",
-      cancelButtonText: "Đóng",
-      confirmButtonColor: "#0d6efd",
-      cancelButtonColor: "#6c757d",
-      width: "32rem",
-    });
-
-    // Nếu người dùng chọn mở trang
-    if (result.isConfirmed) {
-      window.open(cand.url, "_blank");
-    }
   } catch (err) {
     Swal.close();
     console.error("Microlink fetch error:", err);
@@ -521,30 +432,28 @@ const fetchMicrolink = async (cand) => {
   }
 };
 
-
 // -------------------- HIỂN THỊ MODAL --------------------
 const showVoteModal = () => {
   const modalEl = document.getElementById('voteModal')
-  if (!modal) modal = new bootstrap.Modal(modalEl)
-  modal.show()
+  // Cần import bootstrap
+  // if (!modal) modal = new bootstrap.Modal(modalEl)
+  // modal.show()
+  // Tạm thời dùng:
+  new (window.bootstrap.Modal)(modalEl).show();
 }
 
 const showRankingModal = () => {
   const modalEl = document.getElementById('rankingModal')
-  if (!rankingModal) rankingModal = new bootstrap.Modal(modalEl)
-
-  // Xóa chart cũ (nếu có) trước khi hiển thị
   if (rankingChart) {
     rankingChart.destroy()
     rankingChart = null
   }
-
-  rankingModal.show()
-
-  // Bỏ listener 'shown.bs.modal' vì `watch(rankings)` đã xử lý việc render
+  // Cần import bootstrap
+  // if (!rankingModal) rankingModal = new bootstrap.Modal(modalEl)
+  // rankingModal.show()
+  // Tạm thời dùng:
+  new (window.bootstrap.Modal)(modalEl).show();
 }
-
-
 
 // -------------------- BÌNH CHỌN --------------------
 const voteCandidate = async (category, candidate) => {
@@ -559,7 +468,6 @@ const voteCandidate = async (category, candidate) => {
     })
     if (!result.isConfirmed) return
 
-    // 🌀 Hiệu ứng loading (khóa giao diện, tránh double click)
     Swal.fire({
       title: 'Đang gửi bình chọn...',
       allowOutsideClick: false,
@@ -575,12 +483,10 @@ const voteCandidate = async (category, candidate) => {
       cuocThiId: selectedContest.value._id
     })
 
-    // Cập nhật lại số lượt bình chọn
     const countRes = await axiosClient.get(`/api/vote/candidate/${candidate._id}/count`)
     candidate.voteCount = countRes.data.votes
     candidate.voted = true
 
-    // ✅ Đóng loading, hiển thị thành công
     Swal.fire({
       icon: 'success',
       title: 'Đã chọn!',
@@ -598,25 +504,75 @@ const voteCandidate = async (category, candidate) => {
   }
 }
 
-
 // -------------------- HỖ TRỢ --------------------
 const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('vi-VN')
 
+const getStatusInfo = (contest) => {
+  const now = new Date()
+  const startDate = new Date(contest.ngayBatDau)
+  const endDate = new Date(contest.ngayKetThuc)
+
+  if (endDate <= now || contest.status === 2) {
+    return { text: 'Đã kết thúc', badgeClass: 'bg-secondary' }
+  }
+  if (startDate > now || contest.status === 0) {
+    return { text: 'Sắp diễn ra', badgeClass: 'bg-info' }
+  }
+  return { text: 'Đang diễn ra', badgeClass: 'bg-success' }
+}
+
 // -------------------- COMPUTED --------------------
 const filteredContests = computed(() => {
-  if (!filterContestId.value) return contests.value
-  return contests.value.filter(c => c._id === filterContestId.value)
+  let contestsToFilter = []
+  const now = new Date()
+
+  // 1. Lọc theo Tab (Trạng thái)
+  if (filterStatus.value === 'active') {
+    contestsToFilter = allContests.value.filter(
+      c => c.status === 1 && new Date(c.ngayKetThuc) > now
+    );
+  } else if (filterStatus.value === 'upcoming') {
+    contestsToFilter = allContests.value.filter(
+      c => (c.status === 0 || new Date(c.ngayBatDau) > now) && new Date(c.ngayKetThuc) > now
+    );
+  } else { // 'finished'
+    contestsToFilter = allContests.value.filter(
+      c => c.status === 2 || new Date(c.ngayKetThuc) <= now
+    );
+  }
+
+  // 2. Lọc theo Dropdown "Tất cả cuộc thi" (nếu có chọn)
+  if (filterContestId.value) {
+    contestsToFilter = contestsToFilter.filter(c => c._id === filterContestId.value);
+  }
+  
+  // TODO: Thêm logic lọc theo hạng mục nếu cần
+
+  return contestsToFilter;
 })
 
+const contestsForDropdown = computed(() => {
+    if (filterStatus.value === 'active') {
+    return allContests.value.filter(c => getStatusInfo(c).text === 'Đang diễn ra');
+  }
+  if (filterStatus.value === 'upcoming') {
+    return allContests.value.filter(c => getStatusInfo(c).text === 'Sắp diễn ra');
+  }
+  if (filterStatus.value === 'finished') {
+    return allContests.value.filter(c => getStatusInfo(c).text === 'Đã kết thúc');
+  }
+  return [];
+});
+
 const filteredCategories = computed(() => {
+  // Lọc category cho modal vote
   if (!filterCategoryId.value) return categories.value
   return categories.value.filter(cat => cat._id === filterCategoryId.value)
 })
 
-const filteredCategoriesDropdown = computed(() => categories.value)
-// -------------------- TÌM KIẾM ỨNG VIÊN --------------------
-const searchKeyword = ref('')
+const filteredCategoriesDropdown = computed(() => categories.value) // Dùng cho dropdown bộ lọc
 
+// -------------------- TÌM KIẾM ỨNG VIÊN --------------------
 const filteredCandidatesByCat = (catId) => {
   const list = candidates.value[catId] || []
   if (!searchKeyword.value.trim()) return list
@@ -627,113 +583,103 @@ const filteredCandidatesByCat = (catId) => {
 </script>
 
 <style scoped>
-.card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* === STYLE CHO TABS === */
+.nav-pills .nav-link {
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: var(--bs-dark);
+  border-bottom: 3px solid transparent;
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+.nav-pills .nav-link:hover {
+  background-color: var(--bs-light);
+}
+.nav-pills .nav-link.active {
+  background-color: var(--bs-primary);
+  color: white;
+  border-bottom-color: var(--bs-primary);
 }
 
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+/* === STYLE CHO CARD CUỘC THI === */
+.card-contest {
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #e9ecef;
+}
+.card-contest:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
+}
+.card-title-hover {
+  transition: color 0.3s ease;
+}
+.card-contest:hover .card-title-hover {
+  color: var(--bs-primary-dark) !important;
+}
+.card-img-top-wrapper {
+  position: relative;
+  overflow: hidden;
+  height: 200px;
+}
+.card-img-top {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.card-contest:hover .card-img-top {
+  transform: scale(1.05);
 }
 
-.modal-body {
-  background: #fafafa;
+/* === STYLE CHO MODAL BÌNH CHỌN === */
+.candidate-card-modal {
+  background: #fdfdfd;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.candidate-card-modal:hover {
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.candidate-avatar {
+  width: 75px;
+  height: 75px;
+  object-fit: cover;
 }
 
-img {
-  max-width: 100%;
-  height: auto;
-}
-
-/* Style cho container danh sách */
+/* === STYLE MODAL XẾP HẠNG === */
 .ranking-list-container {
   max-height: 400px;
-  /* Đồng bộ với chiều cao biểu đồ */
   overflow-y: auto;
   border: 1px solid #eee;
   border-radius: 8px;
   background: #fff;
 }
-
+.ranking-list-container .d-flex {
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.ranking-list-container .d-flex:hover {
+  background-color: #f8f9fa;
+  transform: translateX(4px);
+}
 @media (max-width: 991px) {
-
-  /* Khi xếp chồng trên màn hình < lg */
   .ranking-list-container {
     max-height: 300px;
-    /* Giảm chiều cao trên mobile */
   }
-
-  /* THÊM MỚI: Giảm chiều cao biểu đồ cho đồng bộ */
   .chart-container {
     height: 300px !important;
   }
 }
-
 @media (max-width: 576px) {
-  h3 {
-    font-size: 1.25rem;
+  .candidate-avatar {
+    width: 50px;
+    height: 50px;
   }
-
-  h5 {
-    font-size: 1rem;
-  }
-
-  h6 {
-    font-size: 0.9rem;
-  }
-
-  p,
-  .small {
-    font-size: 0.8rem;
-  }
-
-  .spinner-border {
-    width: 2rem;
-    height: 2rem;
-  }
-
-  .text-center.py-5 {
-    padding: 2rem 1rem;
-  }
-
-  .modal-body {
-    padding: 1rem;
-  }
-
-  .mb-4.border.rounded.p-3 {
-    padding: 0.75rem;
-  }
-
-  .btn {
-    font-size: 0.85rem;
-  }
+  h3 { font-size: 1.5rem; }
+  h5 { font-size: 1.1rem; }
+  h6 { font-size: 1rem; }
+  p, .small { font-size: 0.9rem; }
 }
-.modal .btn {
-  white-space: nowrap;
-}
-
-.modal .d-flex.flex-md-row {
-  flex-wrap: wrap;
-}
-
-.modal .text-muted {
-  word-break: break-word;
-}
-/* Candidate card padding */
-.candidate-card {
-  padding: 1rem;
-}
-
-/* Badge wrap và giới hạn width laptop */
-@media (min-width: 992px) {
-  .candidate-card .badge {
-    white-space: normal;
-    max-width: 200px;
-  }
-
-  .candidate-card .btn {
-    min-width: 120px;
-  }
-}
-
 </style>
