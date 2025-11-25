@@ -16,7 +16,7 @@ const app = express();
 // Sửa "origin: '*'" thành "origin: 'http://localhost:5173'"
 app.use(
   cors({
-    origin: '*', // <-- Sửa ở đây
+    origin: "https://vote.ndtdev.id.vn", // <-- Sửa ở đây
     credentials: true,
   })
 );
